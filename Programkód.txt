@@ -1,0 +1,70 @@
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_ADDR 0x3C
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+
+// Pins
+int pirPin = 4;    // D4
+int ledPin = 2;    // D2
+int buzzerPin = 5; // D5 (aktív piezo)
+int stableState = LOW;
+unsigned long lastChange = 0;
+const unsigned long debounceTime = 500;
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(pirPin, INPUT);
+  pinMode(ledPin, OUTPUT);
+  pinMode(buzzerPin, OUTPUT);
+
+  Wire.begin(21, 22); // SDA, SCL
+  if(!display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR)) {
+    Serial.println("Nem találtam OLED kijelzőt!");
+    for(;;);
+  }
+
+  display.clearDisplay();
+  display.setTextSize(2);           // NAGY betűméret
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 10);
+  display.println("PIR indul...");
+  display.display();
+
+  Serial.println("PIR mozgás monitor indul...");
+}
+
+void loop() {
+  int pirReading = digitalRead(pirPin);
+
+  if (pirReading != stableState && (millis() - lastChange > debounceTime)) {
+    stableState = pirReading;
+    lastChange = millis();
+
+    display.clearDisplay();
+    display.setTextSize(2);        // NAGY betűméret
+    display.setCursor(0, 10);
+
+    if(stableState == HIGH) {
+      display.println("Mozgas!");
+      Serial.println("Mozgas!");
+      digitalWrite(ledPin, HIGH);
+      digitalWrite(buzzerPin, HIGH); // aktív piezo
+      delay(300);                     // sípolás hossza 1000 ms = 1 sec
+      digitalWrite(buzzerPin, LOW); 
+
+    } else {
+     display.println("Nincs\nMozgas");
+      Serial.println("Nincs mozgas.");
+      digitalWrite(ledPin, LOW);
+      digitalWrite(buzzerPin, LOW);  // piezo le
+    }
+
+    display.display();
+  }
+
+  delay(50);
+}

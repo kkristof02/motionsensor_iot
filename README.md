@@ -1,3 +1,3 @@
 # IoT alapok (BMI1504L)
-Mozgásérzékelő prototípus 
+Mozgásérzékelő prototípus |
 Rinyu László, Kovács Kristóf, Fodor Géza
